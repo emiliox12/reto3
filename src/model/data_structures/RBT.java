@@ -50,7 +50,7 @@ public class RBT<K extends Comparable<K>, V extends Comparable<V>> implements IT
 		if (raiz != null) {
 			raiz = raiz.putRBT(key, val);
 		} else {
-			raiz = new NodoRBT<K, V>(key, val);
+			raiz = new NodoRBT<K, V>(null, key, val);
 		}
 	}
 
@@ -132,14 +132,54 @@ public class RBT<K extends Comparable<K>, V extends Comparable<V>> implements IT
 
 	@Override
 	public ILista<K> keysInRange(K init, K end) {
-		// TODO Auto-generated method stub
-		return null;
+		ListaEncadenada<K> list = new ListaEncadenada<>();
+		NodoRBT<K, V> actual = raiz;
+		NodoRBT<K, V> min = new NodoRBT<>(null, init, null);
+		NodoRBT<K, V> max = new NodoRBT<>(null, end, null);
+		while (actual != null) {
+			int comp = actual.compareTo(min);
+			if (comp < 0 && actual.right != null) {
+				actual = actual.right;
+			} else if (comp > 0 && actual.left != null) {
+				actual = actual.left;
+			} else {
+				break;
+			}
+		}
+		while (actual != null) {
+			if (actual.compareTo(max) < 0) {
+				list.addLast(actual.getKey());
+			} else {
+				break;
+			}
+		}
+		return list;
 	}
 
 	@Override
 	public ILista<V> valuesInRange(K init, K end) {
-		// TODO Auto-generated method stub
-		return null;
+		ListaEncadenada<V> list = new ListaEncadenada<>();
+		NodoRBT<K, V> actual = raiz;
+		NodoRBT<K, V> min = new NodoRBT<>(null, init, null);
+		NodoRBT<K, V> max = new NodoRBT<>(null, end, null);
+		while (actual != null) {
+			int comp = actual.compareTo(min);
+			if (comp < 0 && actual.right != null) {
+				actual = actual.right;
+			} else if (comp > 0 && actual.left != null) {
+				actual = actual.left;
+			} else {
+				break;
+			}
+		}
+		while (actual != null) {
+			if (actual.compareTo(max) < 0) {
+				list.addLast(actual.getValue());
+			} else {
+				break;
+			}
+		}
+		return list;
 	}
 
 }

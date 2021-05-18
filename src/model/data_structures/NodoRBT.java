@@ -7,11 +7,13 @@ public class NodoRBT<K extends Comparable<K>, V extends Comparable<V>> extends N
 	}
 
 	public Color color;
+	NodoRBT<K, V> parent;
 	NodoRBT<K, V> right;
 	NodoRBT<K, V> left;
 
-	public NodoRBT(K key, V value) {
+	public NodoRBT(NodoRBT<K, V> parent, K key, V value) {
 		super(key, value);
+		this.parent = parent;
 		color = Color.RED;
 		// TODO Auto-generated constructor stub
 	}
@@ -99,18 +101,29 @@ public class NodoRBT<K extends Comparable<K>, V extends Comparable<V>> extends N
 				if (left != null) {
 					left = left.putRBT(key, value);
 				} else {
-					left = new NodoRBT<K, V>(key, value);
+					left = new NodoRBT<K, V>(this, key, value);
 				}
 			} else {
 				if (right != null) {
 					right = right.putRBT(key, value);
 				} else {
-					right = new NodoRBT<K, V>(key, value);
+					right = new NodoRBT<K, V>(this, key, value);
 				}
 			}
 		}
 		NodoRBT<K, V> newRoot = evaluateAndCorect();
 		newRoot = newRoot.evaluateAndCorect();
 		return newRoot;
+	}
+	
+	public NodoRBT<K, V> nextNode() {
+		NodoRBT<K, V> actual = this;
+		while (actual.right == null) {
+			if (actual.parent == null) {
+				return null;
+			}
+			actual = actual.parent;
+		}
+		return actual.right;
 	}
 }

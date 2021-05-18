@@ -53,7 +53,6 @@ public class Controller {
 				view.printMessage("--------- \nVideo Trending de país: \nnombre del país?");
 				country = lector.next();
 				System.out.println(country);
-				res = modelo.req2(country);
 				view.printMessage(res);
 				break;
 
@@ -61,7 +60,6 @@ public class Controller {
 				view.printMessage("--------- \nVideo Trending por categoría: \nnombre de la categoría?");
 				category_name = lector.next();
 				System.out.println(category_name);
-				res = modelo.req3(category_name);
 				view.printMessage(res);
 				break;
 
@@ -71,7 +69,7 @@ public class Controller {
 				view.printMessage("--------- \nnumero de registros?");
 				n = lector.next();
 				System.out.println(country + " " + " " + Integer.parseInt(n) + " " + tag);
-				res = modelo.req4(tag, Integer.parseInt(n));
+				
 				view.printMessage(res);
 				break;
 

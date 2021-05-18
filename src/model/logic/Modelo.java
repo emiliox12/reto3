@@ -2,8 +2,6 @@ package model.logic;
 
 import java.io.FileReader;
 import java.io.Reader;
-import java.util.Comparator;
-import java.util.Random;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
@@ -11,9 +9,8 @@ import org.apache.commons.csv.CSVRecord;
 import model.data_structures.ArregloDinamico;
 import model.data_structures.ILista;
 import model.data_structures.ITablaSimbolos;
-import model.data_structures.ListaEncadenada;
-import model.data_structures.NodoTS;
-import model.data_structures.TablaHashLinearProbing;
+import model.data_structures.ITablaSimbolosOrdenada;
+import model.data_structures.RBT;
 import model.data_structures.TablaHashSeparateChaining;
 import model.utils.Ordenamiento;
 
@@ -25,25 +22,31 @@ public class Modelo {
 	/**
 	 * Atributos del modelo del mundo
 	 */
-	private ITablaSimbolos<String, ILista<YoutubeVideo>> videoByCategoryCountry;
-	private ITablaSimbolos<String, ILista<YoutubeVideo>> videoByCountry;
-	private ITablaSimbolos<String, ILista<YoutubeVideo>> videoByCategory;
-	private ITablaSimbolos<String, ILista<YoutubeVideo>> videoByTag;
-	private ILista<Category> categories;
-	private ILista<String> validKeys;
-	private Ordenamiento<YoutubeVideo> sorter;
+	private ITablaSimbolos<String, Sentiment> sentimentsTable;
+	private ITablaSimbolos<String, UserTrack> tracksTable;
+	private ITablaSimbolos<String, ContextContent> contextTable;
+	private ITablaSimbolosOrdenada<String, UserTrack> traksTree;
+	private ITablaSimbolosOrdenada<String, ContextContent> contextTree;
+	private ITablaSimbolosOrdenada<String, ContextContent> contextTreeEnergy;
+	private ITablaSimbolosOrdenada<String, ContextContent> contextTreeDanceability;
+	private ITablaSimbolosOrdenada<String, ContextContent> contextTreeTempo;
+	private ITablaSimbolosOrdenada<String, ContextContent> contextTreeInstrumentales;
+	private ITablaSimbolosOrdenada<String, ContextContent> contextTreeTimes;
 
 	/**
 	 * Constructor del modelo del mundo con capacidad predefinida
 	 */
 	public Modelo() {
-		validKeys = new ArregloDinamico<>(20);
-	  	videoByCategoryCountry = new TablaHashSeparateChaining<>(400);
-		videoByCountry = new TablaHashLinearProbing<>(400);
-	  	videoByCategory = new TablaHashSeparateChaining<>(400);
-		videoByTag = new TablaHashSeparateChaining<>(25000);
-		categories = new ListaEncadenada<Category>();
-		sorter = new Ordenamiento<YoutubeVideo>();
+		sentimentsTable = new TablaHashSeparateChaining<>(400);
+		tracksTable = new TablaHashSeparateChaining<>(400);
+		contextTable = new TablaHashSeparateChaining<>(400);
+		traksTree = new RBT<>();
+		contextTree = new RBT<>();
+		contextTreeEnergy = new RBT<>();
+		contextTreeDanceability = new RBT<>();
+		contextTreeTempo = new RBT<>();
+		contextTreeInstrumentales = new RBT<>();
+		contextTreeTimes = new RBT<>();
 		// datos = new ListaEncadenada<YoutubeVideo>();
 		cargar();
 	}
@@ -54,7 +57,7 @@ public class Modelo {
 	 * @return numero de elementos presentes en el modelo
 	 */
 	public int darTamano() {
-		return videoByCategoryCountry.size();
+		return contextTable.size();
 	}
 
 	public void cargar() {
@@ -63,159 +66,170 @@ public class Modelo {
 		Reader in;
 		long start = System.currentTimeMillis();
 		try {
-			in = new FileReader("./data/category-id.csv");
-			Iterable<CSVRecord> categoriesCsv = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(in);
-			for (CSVRecord record : categoriesCsv) {
-				String id = record.get(0);
-				String name = record.get(1);
-				Category category = new Category(id, name);
-				categories.addLast(category);
+			in = new FileReader("./data/user_track.csv");
+			Iterable<CSVRecord> tracks = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(in);
+			for (CSVRecord record : tracks) {
+				String user_id = record.get("user_id");
+				String track_id = record.get("track_id");
+				String hashtag = record.get("hashtag");
+				String created_at = record.get("created_at");
+				UserTrack track = new UserTrack(user_id, track_id, hashtag, created_at);
+				tracksTable.put(track_id, track);
+				traksTree.put(track_id, track);
 			}
-			in = new FileReader("./data/videos-small.csv");
-			Iterable<CSVRecord> videosCsv = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(in);
-			for (CSVRecord record : videosCsv) {
-				String trending_date = record.get(1);
-				String video_id = record.get("video_id");
-				String title = record.get(2);
-				String channel_title = record.get(3);
-				String category_id = record.get(4);
-				String publish_time = record.get(5);
-				String videoTags = record.get(6);
-				String views = record.get(7);
-				String likes = record.get(8);
-				String dislikes = record.get(9);
-				String comment_count = record.get(10);
-				String thumbnail_link = record.get(11);
-				String comments_disabled = record.get(12);
-				String ratings_disabled = record.get(13);
-				String video_error_or_removed = record.get(14);
-				String descriptio = record.get(15);
-				String country = record.get(16);
-				YoutubeVideo video = new YoutubeVideo(video_id, trending_date, title, channel_title, category_id,
-						publish_time, videoTags, views, likes, dislikes, comment_count, thumbnail_link,
-						comments_disabled, ratings_disabled, video_error_or_removed, descriptio, country);
-				Category category = categories.find(new Category("" + video.getCategory_id(), ""));
-				String key = country.trim().toUpperCase() + category.getName().trim().toUpperCase();
-				if (validKeys.find(key) == null) {
-					validKeys.addLast(key);
-				}
-				ILista<YoutubeVideo> videoList = videoByCategoryCountry.get(key);
-				if (videoList == null) {
-					videoList = new ArregloDinamico<YoutubeVideo>(100);
-					videoByCategoryCountry.put(key, videoList);
-				}
-				ILista<YoutubeVideo> videoCountryList = videoByCountry.get(country.trim().toUpperCase());
-				if (videoCountryList == null) {
-					videoCountryList = new ArregloDinamico<YoutubeVideo>(100);
-					videoByCountry.put(country.trim().toUpperCase(), videoCountryList);
-				}
-				ILista<YoutubeVideo> videoCategryList = videoByCategory.get(category.getName().trim().toUpperCase());
-				if (videoCategryList == null) {
-					videoCategryList = new ArregloDinamico<YoutubeVideo>(100);
-					videoByCategory.put(category.getName().trim().toUpperCase(), videoCategryList);
-				}
-				String[] tagsArray = video.getTags();
-				for (String tag : tagsArray) {
-					ILista<YoutubeVideo> videoTagList = videoByTag.get(tag.trim().toUpperCase());
-					if (videoTagList == null) {
-						videoTagList = new ArregloDinamico<YoutubeVideo>(100);
-						videoByTag.put(tag.trim().toUpperCase(), videoTagList);
-						count++;
-					}
-					videoList.addLast(video);
-				}
-				videoList.addLast(video);
-				videoCountryList.addLast(video);
-				videoCategryList.addLast(video);
+			in = new FileReader("./data/sentiment_values.csv");
+			Iterable<CSVRecord> sentiments = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(in);
+			for (CSVRecord record : sentiments) {
+				String hashtag = record.get("hashtag");
+				String vader_min = record.get("vader_min");
+				String vader_max = record.get("vader_max");
+				String vader_sum = record.get("vader_sum");
+				String vader_avg = record.get("vader_avg");
+				String afinn_min = record.get("afinn_min");
+				String afinn_max = record.get("afinn_max");
+				String afinn_sum = record.get("afinn_sum");
+				String afinn_avg = record.get("afinn_avg");
+				String ol_min = record.get("ol_min");
+				String ol_max = record.get("ol_max");
+				String ol_sum = record.get("ol_sum");
+				String ol_avg = record.get("ol_avg");
+				String ss_min = record.get("ss_min");
+				String ss_max = record.get("ss_max");
+				String ss_sum = record.get("ss_sum");
+				String ss_avg = record.get("ss_avg");
+				Sentiment sentiment = new Sentiment(hashtag, vader_min, vader_max, vader_sum, vader_avg, afinn_min,
+						afinn_max, afinn_sum, afinn_avg, ol_min, ol_max, ol_sum, ol_avg, ss_min, ss_max, ss_sum,
+						ss_avg);
+				sentimentsTable.put(hashtag, sentiment);
+			}
+			in = new FileReader("./data/context_content.csv");
+			Iterable<CSVRecord> contexts = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(in);
+			for (CSVRecord record : contexts) {
+				String instrumentalness = record.get("instrumentalness");
+				String liveness = record.get("liveness");
+				String speechiness = record.get("speechiness");
+				String danceability = record.get("danceability");
+				String valence = record.get("valence");
+				String loudness = record.get("loudness");
+				String tempo = record.get("tempo");
+				String acousticness = record.get("acousticness");
+				String energy = record.get("energy");
+				String mode = record.get("mode");
+				String key = record.get("key");
+				String artist_id = record.get("artist_id");
+				String tweet_lang = record.get("tweet_lang");
+				String track_id = record.get("track_id");
+				String created_at = record.get("created_at");
+				String lang = record.get("lang");
+				String time_zone = record.get("time_zone");
+				String user_id = record.get("user_id");
+				String id = record.get("id");
+				String hour = (created_at.split("\\s")[1].trim());
+				System.out.println(hour);
+				ContextContent context = new ContextContent(instrumentalness, liveness, speechiness, danceability,
+						valence, loudness, tempo, acousticness, energy, mode, key, artist_id, tweet_lang, track_id,
+						created_at, lang, time_zone, user_id, id);
+				contextTable.put(id, context);
+				contextTree.put(id, context);
+				contextTreeEnergy.put(energy, context);
+				contextTreeDanceability.put(danceability, context);
+				contextTreeTempo.put(tempo, context);
+				contextTreeInstrumentales.put(instrumentalness, context);
+				contextTreeTimes.put(hour, context);
+
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		long end = System.currentTimeMillis();
 		System.out.println("Creación: " + (end - start) + " #: " + count);
-		double cargaVideosChaining = Double.valueOf(videoByCategoryCountry.size()) / Double.valueOf(videoByCategoryCountry.getMaxSize());
-		System.out.println("Separate Chaining: \n" + "size: " + videoByCategoryCountry.getMaxSize() + " Duplas: "
-				+ videoByCategoryCountry.size() + " (N/M): " + cargaVideosChaining);
-		// System.out.println(videosChaining.toString());
 	}
 
 	public String req1(String category_name, String country, int n) {
-		ILista<YoutubeVideo> list = videoByCategoryCountry
-				.get(country.trim().toUpperCase() + category_name.trim().toUpperCase());
-		if (list == null) {
-			return null;
+		String res = "";
+		return res;
+	}
+
+	public String req2(String minEnergy, String maxEnergy, String minDanceability, String maxDanceability, int n) {
+		String res = "";
+		ILista<String> energyKeys = contextTreeEnergy.keysInRange(minEnergy, maxEnergy);
+		ILista<ContextContent> contexts = new ArregloDinamico<>(n);
+		for (int i = 0; i < energyKeys.size(); i++) {
+			ContextContent curr = contextTable.get(energyKeys.getElement(i));
+			if (curr.danceability.compareTo(minDanceability) > 0 && curr.danceability.compareTo(maxDanceability) < 0) {
+				contexts.addLast(curr);
+			}
+			if (contexts.size() >= n) {
+				break;
+			}
 		}
-		Comparator<YoutubeVideo> criterio = new YoutubeVideo.ComparadorXLikes();
-		sorter.quickSort(list, criterio, false);
-		ILista<YoutubeVideo> resList = list.sublista(n);
-		String res = "trending_date" + "\t - \t" + "title" + "\t - \t" + "channel_title" + "\t - \t" + "publish_time"
-				+ "\t - \t" + "views" + "\t - \t" + "likes" + "\t - \t" + "dislikes" + "\n";
-		for (int i = 0; i < resList.size(); i++) {
-			YoutubeVideo yt = resList.getElement(i);
-			res += yt.getTrending_date().toString() + "\t" + yt.getTitle() + "\t" + yt.getChannel_title() + "\t"
-					+ yt.getPublish_time() + "\t" + yt.getViews() + "\t" + yt.getLikes() + "\t" + yt.getDislikes()
-					+ "\n";
+		for (int i = 0; i < contexts.size(); i++) {
+			ContextContent curr = contexts.getElement(i);
+			res += "Track " + i + " " + curr.track_id + " with energy of " + curr.energy + " and danceability of "
+					+ curr.danceability + "\n";
 		}
 		return res;
 	}
 
-	public String req2(String country) {
-		ILista<YoutubeVideo> list = videoByCountry.get(country.trim().toUpperCase());
-		if (list == null) {
-			return null;
+	public String req3(String minInstrumentalness, String maxInstrumentalness, String minTempo, String maxTempo,
+			int n) {
+		String res = "";
+		ILista<String> energyKeys = contextTreeInstrumentales.keysInRange(minInstrumentalness, maxInstrumentalness);
+		ILista<ContextContent> contexts = new ArregloDinamico<>(n);
+		for (int i = 0; i < energyKeys.size(); i++) {
+			ContextContent curr = contextTable.get(energyKeys.getElement(i));
+			if (curr.tempo.compareTo(minTempo) > 0 && curr.tempo.compareTo(maxTempo) < 0) {
+				contexts.addLast(curr);
+			}
+			if (contexts.size() >= n) {
+				break;
+			}
 		}
-		Comparator<YoutubeVideo> criterio = new YoutubeVideo.ComparadorXTrending();
-		sorter.quickSort(list, criterio, false);
-		ILista<YoutubeVideo> resList = list.sublista(1);
-		String res = "title" + "\t - \t" + "channel_title" + "\t - \t" + "category_id" + "\t - \t" + "Días" + "\n";
-		for (int i = 0; i < resList.size(); i++) {
-			YoutubeVideo yt = resList.getElement(i);
-			res += yt.getTitle() + "\t" + yt.getChannel_title() + "\t" + yt.getCategory_id() + "\t"
-					+ yt.getTrendingDays() + "\n";
-		}
-		return res;
-	}
-
-	public String req3(String category_name) {
-		ILista<YoutubeVideo> list = videoByCategory.get(category_name.trim().toUpperCase());
-		if (list == null) {
-			return null;
-		}
-		System.out.println(list.size());
-		Comparator<YoutubeVideo> criterio = new YoutubeVideo.ComparadorXTrending();
-		sorter.quickSort(list, criterio, false);
-		ILista<YoutubeVideo> resList = list.sublista(1);
-		String res = "title" + "\t - \t" + "channel_title" + "\t - \t" + "category_id" + "\t - \t" + "Días" + "\n";
-		for (int i = 0; i < resList.size(); i++) {
-			YoutubeVideo yt = resList.getElement(i);
-			res += yt.getTitle() + "\t\t" + yt.getChannel_title() + "\t" + yt.getCategory_id() + "\t"
-					+ yt.getTrendingDays() + "\n";
+		for (int i = 0; i < contexts.size(); i++) {
+			ContextContent curr = contexts.getElement(i);
+			res += "Track " + i + " " + curr.track_id + " with instrumentalness of " + curr.instrumentalness
+					+ " and tempo of " + curr.tempo + "\n";
 		}
 		return res;
 	}
 
-	public String req4(String tag, int n) {
-		ILista<YoutubeVideo> list = videoByTag.get(tag.trim().toUpperCase());
-		System.out.println("list: " + list);
-		if (list == null) {
-			return null;
-		}
-		Comparator<YoutubeVideo> criterio = new YoutubeVideo.ComparadorXLikes();
-		sorter.quickSort(list, criterio, false);
-		ILista<YoutubeVideo> resList = list.sublista(n);
-		String res = "title" + "\t - \t" + "channel_title" + "\t - \t" + "publish_time" + "\t - \t" + "views"
-				+ "\t - \t" + "likes" + "\t - \t" + "dislikes" + "\n";
-		for (int i = 0; i < resList.size(); i++) {
-			YoutubeVideo yt = resList.getElement(i);
-			res += yt.getTitle() + "\t" + yt.getChannel_title() + "\t" + yt.getPublish_time() + "\t" + yt.getViews()
-					+ "\t" + yt.getLikes() + "\t" + yt.getDislikes() + "\t" + yt.getTagsString() + "\n";
+	public String req4() {
+		String res = "";
+		ILista<String> reggae = contextTreeTempo.keysInRange("60", "90");
+		ILista<String> downTempo = contextTreeTempo.keysInRange("70", "100");
+		ILista<String> chillOut = contextTreeTempo.keysInRange("90", "120");
+		ILista<String> hipHop = contextTreeTempo.keysInRange("85", "115");
+		ILista<String> jazzFunk = contextTreeTempo.keysInRange("120", "125");
+		ILista<String> pop = contextTreeTempo.keysInRange("100", "130");
+		ILista<String> rNB = contextTreeTempo.keysInRange("60", "80");
+		ILista<String> rock = contextTreeTempo.keysInRange("110", "140");
+		ILista<String> metal = contextTreeTempo.keysInRange("100", "160");
+		res += "reggae: " + reggae.size() + "\n";
+		res += "downTempo: " + downTempo.size() + "\n";
+		res += "chillOut: " + chillOut.size() + "\n";
+		res += "hipHop: " + hipHop.size() + "\n";
+		res += "jazzFunk: " + jazzFunk.size() + "\n";
+		res += "pop: " + pop.size() + "\n";
+		res += "rNB: " + rNB.size() + "\n";
+		res += "rock: " + rock.size() + "\n";
+		res += "metal: " + metal.size() + "\n";
+		return res;
+	}
+
+	public String req5(String minHour, String maxHour) {
+		String res = "";
+		ILista<ContextContent> contexts = contextTreeTimes.valuesInRange(minHour, maxHour);
+		for (int i = 0; i < 10; i++) {
+			ContextContent curr = contexts.getElement(i);
+			UserTrack track = tracksTable.get(curr.track_id);
+			Sentiment sentiment = sentimentsTable.get(track.hashtag);			
+			res += "Track " + i + ": " + curr.track_id + sentiment.vader_avg;
 		}
 		return res;
 	}
 
 	@Override
 	public String toString() {
-		return videoByCountry.toString();
+		return "";
 	}
 }
