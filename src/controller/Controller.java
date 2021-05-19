@@ -27,10 +27,11 @@ public class Controller {
 	public void run() {
 		Scanner lector = new Scanner(System.in);
 		boolean fin = false;
-		String category_name = "";
-		String country = "";
+		String a = "";
+		String b = "";
+		String c = "";
+		String d = "";
 		String n = "";
-		String tag = "";
 		String res = "";
 
 		while (!fin) {
@@ -39,41 +40,53 @@ public class Controller {
 			int option = lector.nextInt();
 			switch (option) {
 			case 1:
-				view.printMessage("--------- \nVideos trending por país y categoría: \nnombre de la categoría?");
-				category_name = lector.next();
-				view.printMessage("--------- \nnombre del país?");
-				country = lector.next();
-				view.printMessage("--------- \nnumero de registros?");
-				n = lector.next();
-				System.out.println(category_name + " " + country + " " + Integer.parseInt(n));
-				res = modelo.req1(category_name, country, Integer.parseInt(n));
-				view.printMessage(res);
 				break;
 			case 2:
-				view.printMessage("--------- \nVideo Trending de país: \nnombre del país?");
-				country = lector.next();
-				System.out.println(country);
+				view.printMessage("--------- \nMusica para festejar: \nmin Energía?");
+				a = lector.next();
+				view.printMessage("--------- \nMax Energía?");
+				b = lector.next();
+				view.printMessage("--------- \nmin Danceability?");
+				c = lector.next();
+				view.printMessage("--------- \nmax Danceability?");
+				d = lector.next();
+				view.printMessage("--------- \n n?");
+				n = lector.next();
+				System.out.println(a + b + c + d);
+				res = modelo.req2(a, b, c, d, Integer.parseInt(n));
 				view.printMessage(res);
 				break;
 
 			case 3:
-				view.printMessage("--------- \nVideo Trending por categoría: \nnombre de la categoría?");
-				category_name = lector.next();
-				System.out.println(category_name);
+				view.printMessage("--------- \nMusica para estudiar: \nmin Instrumentalness?");
+				a = lector.next();
+				view.printMessage("--------- \nMax Instrumentalness?");
+				b = lector.next();
+				view.printMessage("--------- \nmin Tempo?");
+				c = lector.next();
+				view.printMessage("--------- \nmax Tempo?");
+				d = lector.next();
+				view.printMessage("--------- \n n?");
+				n = lector.next();
+				System.out.println(a + b + c + d);
+				res = modelo.req3(a, b, c, d, Integer.parseInt(n));
 				view.printMessage(res);
 				break;
 
 			case 4:
-				view.printMessage("--------- \nEtiqueta del video?");
-				tag = lector.next();
-				view.printMessage("--------- \nnumero de registros?");
-				n = lector.next();
-				System.out.println(country + " " + " " + Integer.parseInt(n) + " " + tag);
-				
+				view.printMessage("--------- \nreproducciones de los géneros musicales");
+				res = modelo.req4();
 				view.printMessage(res);
 				break;
-
 			case 5:
+				view.printMessage("--------- \nreproducciones en horas \nmin hour (24h)?");
+				a = lector.next();
+				view.printMessage("--------- \nMax hour (24h)?");
+				b = lector.next();
+				res = modelo.req5(a, b);
+				view.printMessage(res);
+				break;
+			case 6:
 				view.printMessage("--------- \n Hasta pronto !! \n---------");
 				lector.close();
 				fin = true;
