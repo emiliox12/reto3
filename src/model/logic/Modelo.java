@@ -125,7 +125,6 @@ public class Modelo {
 				String user_id = record.get("user_id");
 				String id = record.get("id");
 				String hour = (created_at.split("\\s")[1].trim());
-				System.out.println(hour);
 				ContextContent context = new ContextContent(instrumentalness, liveness, speechiness, danceability,
 						valence, loudness, tempo, acousticness, energy, mode, key, artist_id, tweet_lang, track_id,
 						created_at, lang, time_zone, user_id, id);

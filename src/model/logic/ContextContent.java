@@ -1,16 +1,16 @@
 package model.logic;
 
 public class ContextContent implements Comparable<ContextContent>{
-	public String instrumentalness;
-	public String liveness;
-	public String speechiness;
-	public String danceability;
-	public String valence;
-	public String loudness;
+	public float instrumentalness;
+	public float liveness;
+	public float speechiness;
+	public float danceability;
+	public float valence;
+	public float loudness;
 	public String tempo;
-	public String acousticness;
-	public String energy;
-	public String mode;
+	public float acousticness;
+	public float energy;
+	public float mode;
 	public String key;
 	public String artist_id;
 	public String tweet_lang;
@@ -41,16 +41,16 @@ public class ContextContent implements Comparable<ContextContent>{
 			String time_zone,
 			String user_id,
 			String id) {
-		this.instrumentalness = instrumentalness;
-		this.liveness = liveness;
-		this.speechiness = speechiness;
-		this.danceability = danceability;
-		this.valence = valence;
-		this.loudness = loudness;
+		this.instrumentalness = Float.parseFloat(instrumentalness);
+		this.liveness = Float.parseFloat(liveness);
+		this.speechiness = Float.parseFloat(speechiness);
+		this.danceability = Float.parseFloat(danceability);
+		this.valence = Float.parseFloat(valence);
+		this.loudness = Float.parseFloat(loudness);
 		this.tempo = tempo;
-		this.acousticness = acousticness;
-		this.energy = energy;
-		this.mode = mode;
+		this.acousticness = Float.parseFloat(acousticness);
+		this.energy = Float.parseFloat(energy);
+		this.mode = Float.parseFloat(mode);
 		this.key = key;
 		this.artist_id = artist_id;
 		this.tweet_lang = tweet_lang;
