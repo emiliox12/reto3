@@ -7,7 +7,7 @@ public class ContextContent implements Comparable<ContextContent>{
 	public float danceability;
 	public float valence;
 	public float loudness;
-	public String tempo;
+	public float tempo;
 	public float acousticness;
 	public float energy;
 	public float mode;
@@ -47,7 +47,7 @@ public class ContextContent implements Comparable<ContextContent>{
 		this.danceability = Float.parseFloat(danceability);
 		this.valence = Float.parseFloat(valence);
 		this.loudness = Float.parseFloat(loudness);
-		this.tempo = tempo;
+		this.tempo = Float.parseFloat(tempo);
 		this.acousticness = Float.parseFloat(acousticness);
 		this.energy = Float.parseFloat(energy);
 		this.mode = Float.parseFloat(mode);

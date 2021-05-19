@@ -53,7 +53,7 @@ public class Controller {
 				view.printMessage("--------- \n n?");
 				n = lector.next();
 				System.out.println(a + b + c + d);
-				res = modelo.req2(a, b, c, d, Integer.parseInt(n));
+				res = modelo.req2(Float.parseFloat(a), Float.parseFloat(b), Float.parseFloat(c), Float.parseFloat(d), Integer.parseInt(n));
 				view.printMessage(res);
 				break;
 
@@ -69,7 +69,7 @@ public class Controller {
 				view.printMessage("--------- \n n?");
 				n = lector.next();
 				System.out.println(a + b + c + d);
-				res = modelo.req3(a, b, c, d, Integer.parseInt(n));
+				res = modelo.req3(Float.parseFloat(a), Float.parseFloat(b), Float.parseFloat(c), Float.parseFloat(d), Integer.parseInt(n));
 				view.printMessage(res);
 				break;
 
@@ -83,7 +83,7 @@ public class Controller {
 				a = lector.next();
 				view.printMessage("--------- \nMax hour (24h)?");
 				b = lector.next();
-				res = modelo.req5(a, b);
+				res = modelo.req5(Float.parseFloat(a), Float.parseFloat(b));
 				view.printMessage(res);
 				break;
 			case 6:

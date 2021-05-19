@@ -27,11 +27,11 @@ public class Modelo {
 	private ITablaSimbolos<String, ContextContent> contextTable;
 	private ITablaSimbolosOrdenada<String, UserTrack> traksTree;
 	private ITablaSimbolosOrdenada<String, ContextContent> contextTree;
-	private ITablaSimbolosOrdenada<String, ContextContent> contextTreeEnergy;
-	private ITablaSimbolosOrdenada<String, ContextContent> contextTreeDanceability;
-	private ITablaSimbolosOrdenada<String, ContextContent> contextTreeTempo;
-	private ITablaSimbolosOrdenada<String, ContextContent> contextTreeInstrumentales;
-	private ITablaSimbolosOrdenada<String, ContextContent> contextTreeTimes;
+	private ITablaSimbolosOrdenada<Float, ContextContent> contextTreeEnergy;
+	private ITablaSimbolosOrdenada<Float, ContextContent> contextTreeDanceability;
+	private ITablaSimbolosOrdenada<Float, ContextContent> contextTreeTempo;
+	private ITablaSimbolosOrdenada<Float, ContextContent> contextTreeInstrumentales;
+	private ITablaSimbolosOrdenada<Float, ContextContent> contextTreeTimes;
 
 	/**
 	 * Constructor del modelo del mundo con capacidad predefinida
@@ -130,11 +130,11 @@ public class Modelo {
 						created_at, lang, time_zone, user_id, id);
 				contextTable.put(id, context);
 				contextTree.put(id, context);
-				contextTreeEnergy.put(energy, context);
-				contextTreeDanceability.put(danceability, context);
-				contextTreeTempo.put(tempo, context);
-				contextTreeInstrumentales.put(instrumentalness, context);
-				contextTreeTimes.put(hour, context);
+				contextTreeEnergy.put(Float.parseFloat(energy), context);
+				contextTreeDanceability.put(Float.parseFloat(danceability), context);
+				contextTreeTempo.put(Float.parseFloat(tempo), context);
+				contextTreeInstrumentales.put(Float.parseFloat(instrumentalness), context);
+				contextTreeTimes.put(Float.parseFloat(hour), context);
 
 			}
 		} catch (Exception e) {
@@ -149,13 +149,13 @@ public class Modelo {
 		return res;
 	}
 
-	public String req2(String minEnergy, String maxEnergy, String minDanceability, String maxDanceability, int n) {
+	public String req2(float minEnergy, float maxEnergy, float minDanceability, float maxDanceability, int n) {
 		String res = "";
-		ILista<String> energyKeys = contextTreeEnergy.keysInRange(minEnergy, maxEnergy);
+		ILista<Float> energyKeys = contextTreeEnergy.keysInRange(minEnergy, maxEnergy);
 		ILista<ContextContent> contexts = new ArregloDinamico<>(n);
 		for (int i = 0; i < energyKeys.size(); i++) {
-			ContextContent curr = contextTable.get(energyKeys.getElement(i));
-			if (curr.danceability.compareTo(minDanceability) > 0 && curr.danceability.compareTo(maxDanceability) < 0) {
+			ContextContent curr = contextTable.get("" + energyKeys.getElement(i));
+			if (curr.danceability > minDanceability && curr.danceability < maxDanceability) {
 				contexts.addLast(curr);
 			}
 			if (contexts.size() >= n) {
@@ -170,14 +170,14 @@ public class Modelo {
 		return res;
 	}
 
-	public String req3(String minInstrumentalness, String maxInstrumentalness, String minTempo, String maxTempo,
+	public String req3(float minInstrumentalness, float maxInstrumentalness, float minTempo, float maxTempo,
 			int n) {
 		String res = "";
-		ILista<String> energyKeys = contextTreeInstrumentales.keysInRange(minInstrumentalness, maxInstrumentalness);
+		ILista<Float> energyKeys = contextTreeInstrumentales.keysInRange(minInstrumentalness, maxInstrumentalness);
 		ILista<ContextContent> contexts = new ArregloDinamico<>(n);
 		for (int i = 0; i < energyKeys.size(); i++) {
-			ContextContent curr = contextTable.get(energyKeys.getElement(i));
-			if (curr.tempo.compareTo(minTempo) > 0 && curr.tempo.compareTo(maxTempo) < 0) {
+			ContextContent curr = contextTable.get("" + energyKeys.getElement(i));
+			if (curr.tempo > minTempo && curr.tempo < maxTempo) {
 				contexts.addLast(curr);
 			}
 			if (contexts.size() >= n) {
@@ -194,15 +194,15 @@ public class Modelo {
 
 	public String req4() {
 		String res = "";
-		ILista<String> reggae = contextTreeTempo.keysInRange("60", "90");
-		ILista<String> downTempo = contextTreeTempo.keysInRange("70", "100");
-		ILista<String> chillOut = contextTreeTempo.keysInRange("90", "120");
-		ILista<String> hipHop = contextTreeTempo.keysInRange("85", "115");
-		ILista<String> jazzFunk = contextTreeTempo.keysInRange("120", "125");
-		ILista<String> pop = contextTreeTempo.keysInRange("100", "130");
-		ILista<String> rNB = contextTreeTempo.keysInRange("60", "80");
-		ILista<String> rock = contextTreeTempo.keysInRange("110", "140");
-		ILista<String> metal = contextTreeTempo.keysInRange("100", "160");
+		ILista<Float> reggae = contextTreeTempo.keysInRange(60f, 90f);
+		ILista<Float> downTempo = contextTreeTempo.keysInRange(70f, 100f);
+		ILista<Float> chillOut = contextTreeTempo.keysInRange(90f, 120f);
+		ILista<Float> hipHop = contextTreeTempo.keysInRange(85f, 115f);
+		ILista<Float> jazzFunk = contextTreeTempo.keysInRange(120f, 125f);
+		ILista<Float> pop = contextTreeTempo.keysInRange(100f, 130f);
+		ILista<Float> rNB = contextTreeTempo.keysInRange(60f, 80f);
+		ILista<Float> rock = contextTreeTempo.keysInRange(110f, 140f);
+		ILista<Float> metal = contextTreeTempo.keysInRange(100f, 160f);
 		res += "reggae: " + reggae.size() + "\n";
 		res += "downTempo: " + downTempo.size() + "\n";
 		res += "chillOut: " + chillOut.size() + "\n";
@@ -215,7 +215,7 @@ public class Modelo {
 		return res;
 	}
 
-	public String req5(String minHour, String maxHour) {
+	public String req5(float minHour, float maxHour) {
 		String res = "";
 		ILista<ContextContent> contexts = contextTreeTimes.valuesInRange(minHour, maxHour);
 		for (int i = 0; i < 10; i++) {
